@@ -1,6 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.Coroutines
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
@@ -8,6 +5,7 @@ val logback_version: String by project
 plugins {
     application
     kotlin("jvm") version "1.4.0"
+    id("org.jlleitschuh.gradle.ktlint") version "9.3.0"
 }
 
 group = "br.com.dias.andre"

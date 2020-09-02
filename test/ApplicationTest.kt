@@ -1,15 +1,9 @@
 package br.com.dias.andre
 
-import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.request.*
-import io.ktor.features.*
-import io.ktor.routing.*
 import io.ktor.http.*
-import io.ktor.auth.*
-import io.ktor.gson.*
-import kotlin.test.*
 import io.ktor.server.testing.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class ApplicationTest {
     @Test
