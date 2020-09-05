@@ -1,5 +1,10 @@
 package br.com.dias.andre
 
+import api.userRoutes
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializer
+import com.google.gson.annotations.JsonAdapter
 import exceptions.AuthenticationException
 import exceptions.AuthorizationException
 import io.ktor.application.*
@@ -11,10 +16,22 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.tomcat.EngineMain.main
 import io.ktor.util.*
+import org.koin.core.context.startKoin
+import org.koin.ktor.ext.Koin
+import org.litote.kmongo.Id
+import org.litote.kmongo.toId
 
 fun main(args: Array<String>): Unit = main(args)
 
+@KtorExperimentalAPI
 fun Application.module(testing: Boolean = false) {
+
+    val login = environment.config.property("ktor.login").getString()
+    val password = environment.config.property("ktor.password").getString()
+
+    startKoin {
+        modules(applicationModule)
+    }
 
     install(CORS) {
         method(HttpMethod.Options)
@@ -28,12 +45,16 @@ fun Application.module(testing: Boolean = false) {
     install(Authentication) {
         basic("Auth") {
             realm = "Server"
-            validate { if (it.name == login() && it.password == password()) UserIdPrincipal(it.name) else null }
+            validate { if (it.name == login && it.password == password) UserIdPrincipal(it.name) else null }
         }
     }
 
     install(ContentNegotiation) {
         gson {
+            setPrettyPrinting()
+            registerTypeAdapter(Id::class.java, JsonSerializer<Id<Any>> { id, _, _ -> JsonPrimitive(id?.toString()) })
+            registerTypeAdapter(Id::class.java, JsonDeserializer<Id<Any>> { id, _, _ -> id.asString.toId() })
+
         }
     }
 
@@ -57,11 +78,8 @@ fun Application.module(testing: Boolean = false) {
                 call.respondText("Hello ${principal?.name}")
             }
         }
+
+        userRoutes()
     }
 }
 
-@KtorExperimentalAPI
-fun Application.login() = environment.config.property("ktor.login").getString()
-
-@KtorExperimentalAPI
-fun Application.password() = environment.config.property("ktor.password").getString()
