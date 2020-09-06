@@ -1,40 +1,39 @@
 package api
 
+import extensions.toJson
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import models.User
 import models.UserCreateDTO
-import org.koin.ktor.ext.inject
-import org.litote.kmongo.coroutine.CoroutineDatabase
+import util.inject
+import workers.user.UserWorker
 
 const val collection = "users"
 
 fun Route.userRoutes() {
-    val database: CoroutineDatabase by inject()
 
-    route("/users") {
+    val userWorker: UserWorker by inject()
 
-        get {
-            val users = database
-                .getCollection<User>(collection)
-                .find()
-                .toList()
+    route("/user") {
 
+        get("/{id}") {
+            val id = call.parameters["id"]
+            requireNotNull(id)
+            val user = userWorker.get(id)
+            call.respond(HttpStatusCode.OK, user.toJson())
+        }
+
+        get("/all") {
+            val users = userWorker.listAll()
             call.respond(HttpStatusCode.OK, users)
         }
 
         post {
             val dto = call.receive<UserCreateDTO>()
-            val user = User(dto)
-
-            database
-                .getCollection<User>(collection)
-                .insertOne(user)
-
-            call.respond(HttpStatusCode.OK, user)
+            userWorker.save(dto)
+            call.respond(HttpStatusCode.OK, dto)
         }
     }
 }

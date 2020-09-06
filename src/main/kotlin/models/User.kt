@@ -5,16 +5,24 @@ import org.litote.kmongo.Id
 import org.litote.kmongo.newId
 
 data class UserCreateDTO(
+    val id: String,
+    val email: String,
     val name: String
 )
 
 data class User(
     @BsonId
-    val id: Id<User> = newId(),
+    val id: Id<User>,
+    val googleId: String,
     val name: String,
-    val columns: List<Long> = emptyList()
+    val email: String,
+    val columns: List<Id<Column>>
 ) {
-    constructor(dto: UserCreateDTO) : this(
-        name = dto.name
+    constructor(dto: UserCreateDTO, columns: List<Id<Column>>) : this(
+        newId(),
+        dto.id,
+        dto.name,
+        dto.email,
+        columns
     )
 }
