@@ -12,9 +12,11 @@ import io.ktor.auth.*
 import io.ktor.features.*
 import io.ktor.gson.*
 import io.ktor.http.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.tomcat.EngineMain.main
+import io.ktor.sessions.*
 import io.ktor.util.*
 import org.koin.core.context.startKoin
 import org.koin.ktor.ext.Koin
@@ -68,6 +70,17 @@ fun Application.module(testing: Boolean = false) {
     }
 
     routing {
+        intercept(ApplicationCallPipeline.Features) {
+            //temporary
+            val token = call.request.headers["token"]
+            if (token != "12345") {
+                call.respondText {
+                    "invalid token"
+                }
+                return@intercept finish()
+            }
+        }
+
         get("/") {
             call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
         }

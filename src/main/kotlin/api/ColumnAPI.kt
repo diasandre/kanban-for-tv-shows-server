@@ -1,7 +1,5 @@
 package api
 
-import extensions.getId
-import extensions.toJson
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -11,16 +9,12 @@ import models.UserCreateDTO
 import util.inject
 import workers.user.UserWorker
 
-fun Route.userRoutes() {
+fun Route.columnRoutes() {
     val userWorker: UserWorker by inject()
 
-    route("/user") {
-        get("/{id}") {
-            val user = userWorker.get(call.getId())
-            call.respond(HttpStatusCode.OK, user.toJson())
-        }
+    route("/column") {
 
-        get("/all") {
+        get("/all/{id}") {
             val users = userWorker.listAll()
             call.respond(HttpStatusCode.OK, users)
         }

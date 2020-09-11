@@ -1,12 +1,12 @@
 package dao
 
-import api.collection
 import models.User
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import util.inject
 
 class UserDao {
     private val database: CoroutineDatabase by inject()
+    private val collection = "users"
 
     suspend fun listAll() = database
         .getCollection<User>(collection)
