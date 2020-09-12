@@ -1,6 +1,7 @@
 package workers.user
 
 import dao.UserDao
+import exceptions.UserNotFoundException
 import models.Column
 import models.User
 import models.UserCreateDTO
@@ -13,10 +14,9 @@ class UserWorker {
     private val userDao: UserDao by inject()
     private val columnWorker: ColumnWorker by inject()
 
-    suspend fun save(dto: UserCreateDTO) {
+    suspend fun save(dto: UserCreateDTO): User {
         val defaultCreatedColumns = columnWorker.createDefaultColumns(dto.id)
-        val user = User(dto, defaultCreatedColumns)
-        userDao.save(user)
+        return User(dto, defaultCreatedColumns).also { userDao.save(it) }
     }
 
     suspend fun listAll() = userDao.listAll()

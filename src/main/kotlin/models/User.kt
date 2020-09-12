@@ -12,7 +12,7 @@ data class UserCreateDTO(
 
 data class User(
     @BsonId
-    val _id: StringId<User>,
+    val _id: Id<User>,
     val name: String,
     val email: String,
     val columns: List<Id<Column>>

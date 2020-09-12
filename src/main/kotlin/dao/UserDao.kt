@@ -19,5 +19,5 @@ class UserDao {
 
     suspend fun get(id: String) = database
         .getCollection<User>(collection)
-        .findOne(id)
+        .findOneById(id)
 }

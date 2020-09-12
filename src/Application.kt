@@ -21,6 +21,7 @@ import io.ktor.util.*
 import org.koin.core.context.startKoin
 import org.koin.ktor.ext.Koin
 import org.litote.kmongo.Id
+import org.litote.kmongo.id.StringId
 import org.litote.kmongo.toId
 
 fun main(args: Array<String>): Unit = main(args)
@@ -41,7 +42,11 @@ fun Application.module(testing: Boolean = false) {
         method(HttpMethod.Delete)
         method(HttpMethod.Patch)
         header(HttpHeaders.Authorization)
+        header(HttpHeaders.AccessControlAllowHeaders) //temporary
+        header(HttpHeaders.ContentType)//temporary
+        header(HttpHeaders.AccessControlAllowOrigin) //temporary
         allowCredentials = true
+        anyHost() //temporary
     }
 
     install(Authentication) {
@@ -72,7 +77,7 @@ fun Application.module(testing: Boolean = false) {
     routing {
         intercept(ApplicationCallPipeline.Features) {
             //temporary
-            val token = call.request.headers["token"]
+            val token = call.request.headers["Authorization"]
             if (token != "12345") {
                 call.respondText {
                     "invalid token"

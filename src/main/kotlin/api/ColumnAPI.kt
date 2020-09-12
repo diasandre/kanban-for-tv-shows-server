@@ -18,11 +18,5 @@ fun Route.columnRoutes() {
             val users = userWorker.listAll()
             call.respond(HttpStatusCode.OK, users)
         }
-
-        post {
-            val dto = call.receive<UserCreateDTO>()
-            userWorker.save(dto)
-            call.respond(HttpStatusCode.OK, dto)
-        }
     }
 }

@@ -1,5 +1,6 @@
 package api
 
+import exceptions.UserNotFoundException
 import extensions.getId
 import extensions.toJson
 import io.ktor.application.*
@@ -16,8 +17,8 @@ fun Route.userRoutes() {
 
     route("/user") {
         get("/{id}") {
-            val user = userWorker.get(call.getId())
-            call.respond(HttpStatusCode.OK, user.toJson())
+            val user = userWorker.get(call.getId()) ?: throw UserNotFoundException()
+            call.respond(HttpStatusCode.OK, user)
         }
 
         get("/all") {
@@ -25,10 +26,16 @@ fun Route.userRoutes() {
             call.respond(HttpStatusCode.OK, users)
         }
 
+        post("/getOrCreate") {
+            val dto = call.receive<UserCreateDTO>()
+            val user = userWorker.get(dto.id) ?: userWorker.save(dto)
+            call.respond(HttpStatusCode.OK, user)
+        }
+
         post {
             val dto = call.receive<UserCreateDTO>()
-            userWorker.save(dto)
-            call.respond(HttpStatusCode.OK, dto)
+            val user = userWorker.save(dto)
+            call.respond(HttpStatusCode.OK, user)
         }
     }
 }
