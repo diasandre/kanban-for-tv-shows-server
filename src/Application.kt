@@ -1,5 +1,6 @@
 package br.com.dias.andre
 
+import api.columnRoutes
 import api.userRoutes
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
@@ -98,6 +99,7 @@ fun Application.module(testing: Boolean = false) {
         }
 
         userRoutes()
+        columnRoutes()
     }
 }
 

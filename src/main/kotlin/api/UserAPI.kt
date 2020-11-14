@@ -2,7 +2,6 @@ package api
 
 import exceptions.UserNotFoundException
 import extensions.getId
-import extensions.toJson
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
