@@ -38,7 +38,7 @@ dependencies {
 
     implementation("org.koin:koin-ktor:$koinVersion")
 
-    implementation("org.litote.kmongo:kmongo-coroutine:4.1.2")
+    implementation("org.litote.kmongo:kmongo-coroutine:4.2.5")
 
     testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
 }
