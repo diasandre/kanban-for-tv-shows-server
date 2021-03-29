@@ -8,7 +8,7 @@ val logbackVersion: String by project
 plugins {
     application
     kotlin("jvm") version "1.4.0"
-    kotlin("plugin.serialization") version "1.4.0"
+    kotlin("plugin.serialization") version "1.4.32"
 
     id("org.jlleitschuh.gradle.ktlint") version "9.3.0"
 }
