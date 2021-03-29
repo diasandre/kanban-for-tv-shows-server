@@ -10,7 +10,7 @@ plugins {
     kotlin("jvm") version "1.4.0"
     kotlin("plugin.serialization") version "1.4.0"
 
-    id("org.jlleitschuh.gradle.ktlint") version "9.3.0"
+    id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
 }
 
 group = "br.com.dias.andre"
