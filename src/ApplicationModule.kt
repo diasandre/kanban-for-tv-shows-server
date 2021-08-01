@@ -15,8 +15,10 @@ val login: String = System.getProperty("LOGIN_MONGO_ENV")
 val password: String = System.getProperty("PASSWORD_MONGO_ENV")
 val url: String = System.getProperty("URL_MONGO_ENV")
 
+val mongoURL = "mongodb+srv://$login:$password@$url.mongodb.net"
+
 val applicationModule = module {
-    single { KMongo.createClient("mongodb+srv://$login:$password@$url.mongodb.net").coroutine.getDatabase("kanban") }
+    single { KMongo.createClient(mongoURL).coroutine.getDatabase("kanban") }
 
     single { UserDao() }
     single { ColumnDao() }

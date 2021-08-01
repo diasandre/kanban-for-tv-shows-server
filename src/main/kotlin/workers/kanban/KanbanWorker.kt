@@ -15,7 +15,7 @@ class KanbanWorker {
 
     suspend fun build(userId: String) = run {
         val columns = columnWorker.listColumnsByUser(userId)
-        val items = itemWorker.listAllByUser(userId)
+        val items = itemWorker.groupById(userId)
 
         val mapOfColumnsById = columns
             .map { column -> column.id to column }
@@ -26,5 +26,4 @@ class KanbanWorker {
             ITEMS to items
         )
     }
-
 }

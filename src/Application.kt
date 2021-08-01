@@ -3,36 +3,56 @@ package br.com.dias.andre
 import api.columnRoutes
 import api.kanbanRoutes
 import api.userRoutes
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
-import com.google.gson.annotations.JsonAdapter
+import configuration.firebase
 import exceptions.AuthenticationException
-import exceptions.AuthorizationException
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.features.*
-import io.ktor.gson.*
-import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.application.Application
+import io.ktor.application.ApplicationCall
+import io.ktor.application.call
+import io.ktor.application.install
+import io.ktor.application.log
+import io.ktor.auth.authenticate
+import io.ktor.auth.authentication
+import io.ktor.auth.principal
+import io.ktor.features.CORS
+import io.ktor.features.ContentNegotiation
+import io.ktor.features.StatusPages
+import io.ktor.gson.gson
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.response.respond
+import io.ktor.response.respondText
+import io.ktor.routing.get
+import io.ktor.routing.routing
 import io.ktor.server.tomcat.EngineMain.main
-import io.ktor.sessions.*
-import io.ktor.util.*
+import models.FirebasePrincipal
 import org.koin.core.context.startKoin
-import org.koin.ktor.ext.Koin
 import org.litote.kmongo.Id
-import org.litote.kmongo.id.StringId
 import org.litote.kmongo.toId
+import java.io.FileInputStream
 
 fun main(args: Array<String>): Unit = main(args)
 
-@KtorExperimentalAPI
+val ApplicationCall.userId: String
+    get() = principal<FirebasePrincipal>()?.userId ?: throw AuthenticationException()
+
 fun Application.module(testing: Boolean = false) {
 
-    val login = environment.config.property("ktor.login").getString()
-    val password = environment.config.property("ktor.password").getString()
+    val serviceAccount = FileInputStream("tv-show-kanban-firebase.json")
+
+    val options = FirebaseOptions.builder()
+        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+        .setDatabaseUrl("https://tv-show-kanban.firebaseio.com")
+        .build()
+
+    FirebaseApp.initializeApp(options)
 
     startKoin {
         modules(applicationModule)
@@ -44,17 +64,20 @@ fun Application.module(testing: Boolean = false) {
         method(HttpMethod.Delete)
         method(HttpMethod.Patch)
         header(HttpHeaders.Authorization)
-        header(HttpHeaders.AccessControlAllowHeaders) //temporary
-        header(HttpHeaders.ContentType)//temporary
-        header(HttpHeaders.AccessControlAllowOrigin) //temporary
+        header(HttpHeaders.AccessControlAllowHeaders) // temporary
+        header(HttpHeaders.ContentType) // temporary
+        header(HttpHeaders.AccessControlAllowOrigin) // temporary
         allowCredentials = true
-        anyHost() //temporary
+        anyHost() // temporary
     }
 
-    install(Authentication) {
-        basic("Auth") {
-            realm = "Server"
-            validate { if (it.name == login && it.password == password) UserIdPrincipal(it.name) else null }
+    authentication {
+        firebase("firebase", FirebaseApp.getInstance()) {
+            validate { credential ->
+                FirebasePrincipal(
+                    userId = credential.token.uid
+                )
+            }
         }
     }
 
@@ -63,39 +86,25 @@ fun Application.module(testing: Boolean = false) {
             setPrettyPrinting()
             registerTypeAdapter(Id::class.java, JsonSerializer<Id<Any>> { id, _, _ -> JsonPrimitive(id?.toString()) })
             registerTypeAdapter(Id::class.java, JsonDeserializer<Id<Any>> { id, _, _ -> id.asString.toId() })
-
         }
     }
 
     install(StatusPages) {
         exception<AuthenticationException> { cause ->
+            log.info(cause.localizedMessage)
             call.respond(HttpStatusCode.Unauthorized)
-        }
-        exception<AuthorizationException> { cause ->
-            call.respond(HttpStatusCode.Forbidden)
         }
     }
 
     routing {
-        intercept(ApplicationCallPipeline.Features) {
-            //temporary
-            val token = call.request.headers["Authorization"]
-            if (token != "12345") {
-                call.respondText {
-                    "invalid token"
-                }
-                return@intercept finish()
-            }
-        }
 
         get("/") {
             call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
         }
 
-        authenticate("Auth") {
+        authenticate("firebase") {
             get("/protected/route/basic") {
-                val principal = call.principal<UserIdPrincipal>()
-                call.respondText("Hello ${principal?.name}")
+                call.respondText("Hello ${call.userId}")
             }
         }
 
@@ -104,4 +113,3 @@ fun Application.module(testing: Boolean = false) {
         kanbanRoutes()
     }
 }
-

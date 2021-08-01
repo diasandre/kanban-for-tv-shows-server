@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+val arrowVersion by extra { "0.11.0" }
 val ktorVersion: String by project
 val kotlinVersion: String by project
 val koinVersion: String by project
@@ -7,18 +8,16 @@ val logbackVersion: String by project
 
 plugins {
     application
-    kotlin("jvm") version "1.4.0"
-    kotlin("plugin.serialization") version "1.4.0"
-
-    id("org.jlleitschuh.gradle.ktlint") version "9.3.0"
+    kotlin("jvm") version "1.5.21"
+    kotlin("plugin.serialization") version "1.5.21"
 }
 
 group = "br.com.dias.andre"
 version = "0.0.1"
-java.sourceCompatibility = JavaVersion.VERSION_1_8
+java.sourceCompatibility = JavaVersion.VERSION_11
 
 application {
-    mainClassName = "io.ktor.server.tomcat.EngineMain"
+    mainClass.set("io.ktor.server.tomcat.EngineMain")
 }
 
 repositories {
@@ -38,7 +37,13 @@ dependencies {
 
     implementation("org.koin:koin-ktor:$koinVersion")
 
-    implementation("org.litote.kmongo:kmongo-coroutine:4.1.2")
+    implementation("io.arrow-kt:arrow-core:$arrowVersion")
+    implementation("io.arrow-kt:arrow-fx:$arrowVersion")
+    implementation("io.arrow-kt:arrow-syntax:$arrowVersion")
+
+    implementation("org.litote.kmongo:kmongo-coroutine:4.2.8")
+
+    api("com.google.firebase:firebase-admin:8.0.0")
 
     testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
 }
@@ -46,7 +51,7 @@ dependencies {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 }
 

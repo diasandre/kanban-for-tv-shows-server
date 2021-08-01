@@ -1,12 +1,8 @@
 package workers.user
 
 import dao.UserDao
-import exceptions.UserNotFoundException
-import models.Column
 import models.User
 import models.UserCreateDTO
-import org.litote.kmongo.Id
-import org.litote.kmongo.id.StringId
 import util.inject
 import workers.column.ColumnWorker
 

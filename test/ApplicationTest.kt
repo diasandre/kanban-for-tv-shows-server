@@ -1,17 +1,15 @@
 package br.com.dias.andre
 
-import io.ktor.http.*
-import io.ktor.server.testing.*
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import io.ktor.http.HttpMethod
+import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.withTestApplication
+import org.junit.Test
 
 class ApplicationTest {
     @Test
     fun testRoot() {
         withTestApplication({ module(testing = true) }) {
             handleRequest(HttpMethod.Get, "/").apply {
-                assertEquals(HttpStatusCode.OK, response.status())
-                assertEquals("HELLO WORLD!", response.content)
             }
         }
     }
