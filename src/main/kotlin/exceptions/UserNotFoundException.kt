@@ -1,5 +1,5 @@
 package exceptions
 
-import io.ktor.features.*
+import io.ktor.server.plugins.BadRequestException
 
 class UserNotFoundException : BadRequestException("User not found")

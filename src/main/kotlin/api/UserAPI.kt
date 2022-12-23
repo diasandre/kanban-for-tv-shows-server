@@ -2,13 +2,16 @@ package api
 
 import exceptions.UserNotFoundException
 import extensions.getId
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 import models.UserCreateDTO
-import util.inject
+import org.koin.ktor.ext.inject
 import workers.user.UserWorker
 
 fun Route.userRoutes() {
