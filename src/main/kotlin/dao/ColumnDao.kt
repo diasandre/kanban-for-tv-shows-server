@@ -9,6 +9,7 @@ import org.litote.kmongo.eq
 import util.inject
 
 class ColumnDao {
+
     private val database: CoroutineDatabase by inject()
     private val collection = "columns"
 
