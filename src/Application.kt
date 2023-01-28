@@ -13,6 +13,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.gson.gson
+import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.call
 import io.ktor.server.application.install
@@ -35,77 +36,79 @@ import org.litote.kmongo.Id
 import org.litote.kmongo.toId
 
 fun main() {
-    embeddedServer(Tomcat, port = 8080) {
-        val login = environment.config.property("ktor.login").getString()
-        val password = environment.config.property("ktor.password").getString()
+    embeddedServer(Tomcat, port = 8080, module = Application::myApplicationModule).start(wait = true)
+}
 
-        startKoin {
-            modules(applicationModule)
+fun Application.myApplicationModule() {
+    val login = environment.config.propertyOrNull("ktor.login")?.getString() ?: "andre"
+    val password = environment.config.propertyOrNull("ktor.password")?.getString() ?: "12345"
+
+    startKoin {
+        modules(applicationModule)
+    }
+
+    install(CORS) {
+        allowMethod(HttpMethod.Options)
+        allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Delete)
+        allowMethod(HttpMethod.Patch)
+        allowHeader(HttpHeaders.Authorization)
+        allowHeader(HttpHeaders.AccessControlAllowHeaders) // temporary
+        allowHeader(HttpHeaders.ContentType) // temporary
+        allowHeader(HttpHeaders.AccessControlAllowOrigin) // temporary
+        allowCredentials = true
+        anyHost() // temporary
+    }
+
+    install(Authentication) {
+        basic("Auth") {
+            realm = "Server"
+            validate { if (it.name == login && it.password == password) UserIdPrincipal(it.name) else null }
         }
+    }
 
-        install(CORS) {
-            allowMethod(HttpMethod.Options)
-            allowMethod(HttpMethod.Put)
-            allowMethod(HttpMethod.Delete)
-            allowMethod(HttpMethod.Patch)
-            allowHeader(HttpHeaders.Authorization)
-            allowHeader(HttpHeaders.AccessControlAllowHeaders) // temporary
-            allowHeader(HttpHeaders.ContentType) // temporary
-            allowHeader(HttpHeaders.AccessControlAllowOrigin) // temporary
-            allowCredentials = true
-            anyHost() // temporary
+    install(ContentNegotiation) {
+        gson {
+            setPrettyPrinting()
+            registerTypeAdapter(Id::class.java, JsonSerializer<Id<Any>> { id, _, _ -> JsonPrimitive(id?.toString()) })
+            registerTypeAdapter(Id::class.java, JsonDeserializer<Id<Any>> { id, _, _ -> id.asString.toId() })
         }
+    }
 
-        install(Authentication) {
-            basic("Auth") {
-                realm = "Server"
-                validate { if (it.name == br.com.dias.andre.login && it.password == br.com.dias.andre.password) UserIdPrincipal(it.name) else null }
-            }
+    install(StatusPages) {
+        exception<AuthenticationException> { call, _ ->
+            call.respond(HttpStatusCode.Unauthorized)
         }
-
-        install(ContentNegotiation) {
-            gson {
-                setPrettyPrinting()
-                registerTypeAdapter(Id::class.java, JsonSerializer<Id<Any>> { id, _, _ -> JsonPrimitive(id?.toString()) })
-                registerTypeAdapter(Id::class.java, JsonDeserializer<Id<Any>> { id, _, _ -> id.asString.toId() })
-            }
+        exception<AuthorizationException> { call, _ ->
+            call.respond(HttpStatusCode.Forbidden)
         }
+    }
 
-        install(StatusPages) {
-            exception<AuthenticationException> { call, _ ->
-                call.respond(HttpStatusCode.Unauthorized)
-            }
-            exception<AuthorizationException> { call, _ ->
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-
-        routing {
-            intercept(ApplicationCallPipeline.Plugins) {
-                // temporary
-                val token = call.request.headers["Authorization"]
-                if (token != "12345") {
-                    call.respondText {
-                        "invalid token"
-                    }
-                    return@intercept finish()
+    routing {
+        intercept(ApplicationCallPipeline.Plugins) {
+            // temporary
+            val token = call.request.headers["Authorization"]
+            if (token != "12345") {
+                call.respondText {
+                    "invalid token"
                 }
+                return@intercept finish()
             }
-
-            get("/") {
-                call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
-            }
-
-            authenticate("Auth") {
-                get("/protected/route/basic") {
-                    val principal = call.principal<UserIdPrincipal>()
-                    call.respondText("Hello ${principal?.name}")
-                }
-            }
-
-            userRoutes()
-            columnRoutes()
-            kanbanRoutes()
         }
-    }.start(wait = true)
+
+        get("/") {
+            call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
+        }
+
+        authenticate("Auth") {
+            get("/protected/route/basic") {
+                val principal = call.principal<UserIdPrincipal>()
+                call.respondText("Hello ${principal?.name}")
+            }
+        }
+
+        userRoutes()
+        columnRoutes()
+        kanbanRoutes()
+    }
 }
